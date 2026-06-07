@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Armazenamento na Nuvem | EF05CO06</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Nunito+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nunito Sans',sans-serif;background:#F0F9FF;min-height:100vh;display:flex;flex-direction:column}
+.tela{display:none;flex-direction:column;flex:1}
+.tela.ativa{display:flex}
+
+.header{color:white;padding:14px 22px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0}
+.h-t0{background:#0369A1}.h-t1{background:#7C3AED}.h-t2{background:#0F766E}
+.h-t3{background:#B45309}.h-t4{background:#BE185D}.h-t5{background:#1D4ED8}
+.header-title{font-family:'Nunito',sans-serif;font-size:19px;font-weight:900}
+.header-sub{font-size:12px;color:rgba(255,255,255,.75);margin-top:2px}
+.header-badge{font-size:11px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.8);text-transform:uppercase;margin-bottom:2px}
+.steps{display:flex;gap:5px;flex-shrink:0}
+.sd{width:26px;height:26px;border-radius:50%;border:2px solid rgba(255,255,255,.25);font-size:10px;font-weight:700;color:rgba(255,255,255,.4);display:flex;align-items:center;justify-content:center;transition:all .3s}
+.sd.done{background:#0369A1;border-color:#0369A1;color:white}
+.sd.active{background:rgba(255,255,255,.3);border-color:rgba(255,255,255,.8);color:white}
+
+.content{flex:1;overflow-y:auto;padding:20px 18px 32px}
+.card{background:white;border-radius:16px;box-shadow:0 2px 14px rgba(0,0,0,.07);padding:20px;margin-bottom:16px}
+
+.hero{border-radius:18px;padding:26px 22px;margin-bottom:18px;text-align:center;color:white;background:linear-gradient(135deg,#0369A1,#38BDF8)}
+.hero h2{font-family:'Nunito',sans-serif;font-size:22px;font-weight:900;margin-bottom:8px}
+.hero p{font-size:13px;line-height:1.65;color:rgba(255,255,255,.92);max-width:440px;margin:0 auto}
+.hero-ico{font-size:46px;margin-bottom:8px}
+
+/* COMO FUNCIONA — diagrama */
+.diagrama{background:#EFF6FF;border:1.5px solid #BFDBFE;border-radius:16px;padding:18px;margin-bottom:16px}
+.diag-title{font-family:'Nunito',sans-serif;font-weight:900;font-size:14px;color:#1E3A8A;margin-bottom:14px;text-align:center}
+.diag-row{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.diag-item{background:white;border:1.5px solid #BFDBFE;border-radius:12px;padding:10px 10px 8px;text-align:center;min-width:72px;flex:1;max-width:100px}
+.diag-ico{font-size:24px;margin-bottom:4px}
+.diag-txt{font-size:10px;font-weight:700;color:#1E3A8A;line-height:1.3}
+.diag-arrow{font-size:18px;color:#60A5FA;font-weight:700;flex-shrink:0}
+.diag-center{background:linear-gradient(135deg,#1D4ED8,#3B82F6);border-radius:14px;padding:14px;text-align:center;color:white;margin:0 auto 10px;max-width:240px}
+.diag-center .diag-ico{font-size:32px}
+.diag-center .diag-txt{color:rgba(255,255,255,.9);font-size:11px;margin-top:4px}
+.diag-legenda{font-size:11px;color:#3B82F6;text-align:center;font-weight:600}
+
+/* SERVIÇOS com imagens */
+.serv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:12px;margin-bottom:16px}
+.serv-card{background:white;border:2px solid #E0F2FE;border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s}
+.serv-card:hover{transform:translateY(-3px);box-shadow:0 8px 20px rgba(0,0,0,.1);border-color:#38BDF8}
+.serv-card.sel{border-color:#0369A1;box-shadow:0 6px 18px rgba(3,105,161,.2);transform:translateY(-3px)}
+.serv-logo{width:100%;height:90px;display:flex;align-items:center;justify-content:center;padding:10px}
+.serv-logo img{max-width:100%;max-height:68px;object-fit:contain}
+.serv-body{padding:10px 12px 12px;border-top:1px solid #F0F9FF}
+.serv-nome{font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;color:#0369A1;margin-bottom:3px}
+.serv-empresa{font-size:10px;color:#64748B;margin-bottom:6px}
+.serv-desc{font-size:11px;color:#475569;line-height:1.4;display:none}
+.serv-card.sel .serv-desc{display:block}
+.serv-free{display:inline-block;font-size:10px;font-weight:700;background:#DCFCE7;color:#15803D;border-radius:99px;padding:2px 8px;margin-top:4px}
+
+/* VANTAGENS E DESVANTAGENS */
+.vd-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+@media(max-width:480px){.vd-grid{grid-template-columns:1fr}}
+.vd-box{border-radius:14px;padding:16px}
+.vd-vant{background:#E0F2FE;border:1.5px solid #7DD3FC}
+.vd-desv{background:#FEF9C3;border:1.5px solid #FDE047}
+.vd-title{font-family:'Nunito',sans-serif;font-weight:900;font-size:14px;margin-bottom:10px}
+.vd-vant .vd-title{color:#0C4A6E}
+.vd-desv .vd-title{color:#713F12}
+.vd-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:7px;font-size:13px;line-height:1.5}
+.vd-item:last-child{margin-bottom:0}
+.vd-dot-v{width:8px;height:8px;border-radius:50%;background:#0EA5E9;flex-shrink:0;margin-top:5px}
+.vd-dot-d{width:8px;height:8px;border-radius:50%;background:#CA8A04;flex-shrink:0;margin-top:5px}
+.vd-vant .vd-item{color:#0C4A6E}
+.vd-desv .vd-item{color:#713F12}
+
+/* DATA CENTER */
+.dc-box{background:#1E293B;border-radius:14px;padding:16px;margin-bottom:16px;color:white}
+.dc-title{font-family:'Nunito',sans-serif;font-weight:900;font-size:14px;color:#38BDF8;margin-bottom:10px}
+.dc-img-wrap{border-radius:10px;overflow:hidden;margin-bottom:10px}
+.dc-img{width:100%;height:140px;object-fit:cover;display:block}
+.dc-img-fallback{width:100%;height:140px;background:linear-gradient(135deg,#0F172A,#1E3A8A);display:flex;align-items:center;justify-content:center;font-size:48px;display:none}
+.dc-lista{display:flex;flex-direction:column;gap:6px}
+.dc-item{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:#94A3B8;line-height:1.4}
+.dc-dot{width:6px;height:6px;border-radius:50%;background:#38BDF8;flex-shrink:0;margin-top:4px}
+
+/* QUIZ */
+.ah{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.an{width:33px;height:33px;border-radius:50%;color:white;font-family:'Nunito',sans-serif;font-weight:900;font-size:14px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.at{font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;color:#1E293B}
+.as{font-size:12px;color:#64748B}
+.opc{background:#F8FAFC;border:2px solid #E2E8F0;border-radius:10px;padding:10px 14px;cursor:pointer;font-size:13px;font-weight:600;color:#1E293B;text-align:left;transition:all .18s;font-family:'Nunito Sans',sans-serif;width:100%;margin-bottom:7px}
+.opc:hover:not(:disabled):not(.ok):not(.err){border-color:#0369A1;background:#E0F2FE;color:#0C4A6E}
+.opc.ok{background:#DCFCE7;border-color:#16A34A;color:#14532D}
+.opc.err{background:#FEE2E2;border-color:#DC2626;color:#7F1D1D}
+.opc.sel{border-color:#0369A1;background:#E0F2FE;color:#0C4A6E;font-weight:700}
+.opc:disabled{cursor:not-allowed}
+.fbk{margin-top:6px;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:700;display:none}
+.fbk.ok{background:#DCFCE7;color:#14532D}.fbk.err{background:#FEE2E2;color:#7F1D1D}
+.btn-conf{background:#0369A1;color:white;border:none;border-radius:8px;padding:7px 16px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;margin-top:4px;display:none}
+.btn-conf:hover{background:#0C4A6E}
+.pgw{background:#BAE6FD;border-radius:99px;height:7px;overflow:hidden;margin:10px 0 4px}
+.pgf{height:100%;border-radius:99px;transition:width .4s;background:#0369A1}
+
+/* DRAG */
+.dpool{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;padding:12px;background:#F0F9FF;border-radius:10px;border:2px dashed #7DD3FC;min-height:46px}
+.dchip{background:white;border:2px solid #0369A1;color:#0C4A6E;border-radius:8px;padding:6px 13px;font-weight:700;font-size:12px;cursor:grab;user-select:none;transition:all .18s;display:flex;align-items:center;gap:6px;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.dchip:active{cursor:grabbing}.dchip:hover{background:#E0F2FE;transform:scale(1.03)}
+.dchip.oculto{display:none}.dchip span{pointer-events:none}
+.dchip img{width:28px;height:28px;object-fit:contain;border-radius:4px;pointer-events:none;flex-shrink:0}
+.zgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:460px){.zgrid{grid-template-columns:1fr}}
+.dz{border-radius:12px;min-height:80px;padding:10px;border:2px dashed}
+.dz.over{filter:brightness(.95)}
+.z-nuv{background:#E0F2FE;border-color:#7DD3FC}
+.z-loc{background:#DCFCE7;border-color:#86EFAC}
+.zt{font-family:'Nunito',sans-serif;font-weight:800;font-size:12px;margin-bottom:6px}
+.z-nuv .zt{color:#0C4A6E}.z-loc .zt{color:#14532D}
+.zitens{display:flex;flex-wrap:wrap;gap:5px}
+.ztag{display:inline-flex;align-items:center;gap:4px;background:white;border:1.5px solid #94A3B8;border-radius:6px;padding:3px 6px 3px 9px;font-size:11px;font-weight:700;color:#1E293B;cursor:default}
+.ztag .rm{cursor:pointer;color:#64748B;font-weight:900;font-size:13px;line-height:1;padding:0 2px;border:none;background:transparent}
+.ztag .rm:hover{color:#DC2626}
+.ztag.ok{background:#DCFCE7;border-color:#16A34A;color:#14532D}
+.ztag.err{background:#FEE2E2;border-color:#DC2626;color:#7F1D1D}
+.ztag.ok .rm,.ztag.err .rm{display:none}
+
+/* FRASES */
+.banco{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0}
+.pb{background:white;border:2px solid #0369A1;color:#0C4A6E;border-radius:7px;padding:5px 12px;font-family:'Nunito',sans-serif;font-weight:700;font-size:12px;cursor:pointer;transition:all .18s}
+.pb:hover:not(:disabled){background:#E0F2FE}
+.pb.sel{outline:3px solid #0369A1;outline-offset:1px;background:#E0F2FE}
+.pb.usada{opacity:.3;cursor:not-allowed}
+.fln{font-size:14px;line-height:2.8;color:#1E293B}
+.lac{display:inline-block;border-bottom:2.5px solid #0369A1;min-width:95px;margin:0 4px;font-weight:700;color:#0C4A6E;text-align:center;cursor:pointer;border-radius:4px;padding:0 4px;transition:all .18s}
+.lac:not([data-p]):hover{background:#E0F2FE}
+.lac[data-p]:not(.certa):not(.errada){border-color:#0369A1;background:#E0F2FE;cursor:pointer}
+.lac[data-p]:not(.certa):not(.errada):hover{background:#BAE6FD}
+.lac.certa{border-color:#16A34A;color:#14532D;background:#DCFCE7;cursor:default}
+.lac.errada{border-color:#DC2626;color:#7F1D1D;background:#FEE2E2;cursor:default}
+
+/* V/F */
+.vfi{margin-bottom:14px}
+.vfa{font-size:13px;font-weight:600;color:#1E293B;margin-bottom:7px;line-height:1.5}
+.vfb{display:flex;gap:7px}
+.vfbt{padding:7px 16px;border-radius:7px;border:2px solid;font-family:'Nunito',sans-serif;font-weight:800;font-size:12px;cursor:pointer;transition:all .18s}
+.vfbt.v{border-color:#16A34A;color:#14532D;background:white}
+.vfbt.f{border-color:#DC2626;color:#7F1D1D;background:white}
+.vfbt.v:hover:not(:disabled){background:#DCFCE7}
+.vfbt.f:hover:not(:disabled){background:#FEE2E2}
+.vfbt:disabled{cursor:not-allowed;opacity:.7}
+.vfbt.v.sel-btn{background:#DCFCE7;font-weight:900}
+.vfbt.f.sel-btn{background:#FEE2E2;font-weight:900}
+.vffb{font-size:12px;font-weight:700;margin-top:5px}
+.btn-conf-vf{background:#BE185D;color:white;border:none;border-radius:8px;padding:6px 14px;font-family:'Nunito',sans-serif;font-size:12px;font-weight:800;cursor:pointer;margin-top:6px;display:none}
+.btn-conf-vf:hover{background:#9D174D}
+
+/* HINT */
+.hint{font-size:11px;border-radius:6px;padding:5px 10px;margin-bottom:10px;display:flex;align-items:center;gap:5px;border-left:3px solid}
+.hint-blue{color:#0C4A6E;background:#E0F2FE;border-color:#0369A1}
+.hint-teal{color:#134E4A;background:#F0FDFA;border-color:#0F766E}
+.hint-amber{color:#78350F;background:#FEF3C7;border-color:#D97706}
+.hint-pink{color:#831843;background:#FCE7F3;border-color:#BE185D}
+
+/* BOTÕES */
+.btn-pr{width:100%;padding:13px;color:white;border:none;border-radius:12px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-pr:hover{filter:brightness(.9);transform:translateY(-1px)}
+.bp-0{background:#0369A1}.bp-1{background:#7C3AED}.bp-2{background:#0F766E}
+.bp-3{background:#B45309}.bp-4{background:#BE185D}.bp-res{background:#1D4ED8}
+
+/* RESULTADO */
+.nr{width:110px;height:110px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;margin:0 auto 16px;border:5px solid}
+.nn{font-family:'Nunito',sans-serif;font-size:38px;font-weight:900;line-height:1}
+.nm{font-size:12px;font-weight:700;margin-top:2px}
+.nA{border-color:#16A34A;background:#DCFCE7;color:#14532D}
+.nB{border-color:#2563EB;background:#DBEAFE;color:#1E3A8A}
+.nC{border-color:#D97706;background:#FEF3C7;color:#78350F}
+.nD{border-color:#DC2626;background:#FEE2E2;color:#7F1D1D}
+.rev-box{background:#F0F9FF;border:2px solid #BAE6FD;border-radius:14px;padding:16px;margin-bottom:14px}
+.rev-titulo{font-family:'Nunito',sans-serif;font-weight:800;font-size:14px;color:#0369A1;margin-bottom:10px}
+.rev-item{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;font-size:13px;color:#0C4A6E;line-height:1.5}
+.rev-item:last-child{margin-bottom:0}
+.rev-dot{width:8px;height:8px;border-radius:50%;background:#38BDF8;flex-shrink:0;margin-top:5px}
+.btn-ref{width:100%;padding:13px;background:white;color:#0369A1;border:2.5px solid #0369A1;border-radius:12px;font-family:'Nunito',sans-serif;font-size:14px;font-weight:800;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px}
+.btn-ref:hover{background:#F0F9FF}
+
+footer{background:#0369A1;color:rgba(255,255,255,.8);text-align:center;padding:10px 16px;font-size:12px;flex-shrink:0}
+footer strong{color:white}
+
+@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+.fadein{animation:fadeIn .3s ease}
+</style>
+</head>
+<body>
+
+<!-- ══════════ TELA 1 — CONTEÚDO ══════════ -->
+<div class="tela ativa" id="t0">
+  <div class="header h-t0">
+    <div>
+      <div class="header-title">ARMAZENAMENTO NA NUVEM</div>
+      <div class="header-sub">Cloud Storage · EF05CO06</div>
+    </div>
+    <div class="steps" id="sp0"></div>
+  </div>
+  <div class="content">
+
+    <div class="hero">
+      <div class="hero-ico">☁️</div>
+      <h2>Armazenamento Remoto (Nuvem)</h2>
+      <p>Dados guardados em <strong>servidores potentes</strong> localizados em data centers — acessíveis de qualquer lugar do mundo pela internet!</p>
+    </div>
+
+    <!-- COMO FUNCIONA -->
+    <div class="diagrama">
+      <div class="diag-title">🌐 Como funciona o armazenamento em nuvem?</div>
+      <div class="diag-row">
+        <div class="diag-item">
+          <div class="diag-ico">💻</div>
+          <div class="diag-txt">Seu computador</div>
+        </div>
+        <div class="diag-arrow">→</div>
+        <div class="diag-item">
+          <div class="diag-ico">📶</div>
+          <div class="diag-txt">Internet (Wi-Fi ou dados)</div>
+        </div>
+        <div class="diag-arrow">→</div>
+        <div class="diag-item">
+          <div class="diag-ico">🏢</div>
+          <div class="diag-txt">Data Center (servidores)</div>
+        </div>
+      </div>
+      <div class="diag-center">
+        <div class="diag-ico">☁️</div>
+        <div class="diag-txt">Seus arquivos ficam guardados aqui, seguros e disponíveis 24h por dia</div>
+      </div>
+      <div class="diag-row">
+        <div class="diag-item"><div class="diag-ico">📱</div><div class="diag-txt">Celular</div></div>
+        <div class="diag-item"><div class="diag-ico">💻</div><div class="diag-txt">Notebook</div></div>
+        <div class="diag-item"><div class="diag-ico">🖥️</div><div class="diag-txt">Desktop</div></div>
+        <div class="diag-item"><div class="diag-ico">📟</div><div class="diag-txt">Tablet</div></div>
+      </div>
+      <div class="diag-legenda">← Acesse de qualquer dispositivo conectado à internet →</div>
+    </div>
+
+    <!-- DATA CENTER -->
+    <div class="dc-box">
+      <div class="dc-title">🏢 O que é um Data Center?</div>
+      <div class="dc-img-wrap">
+        <img class="dc-img" src="https://images.unsplash.com/photo-1558494949-ef010cbdcc31?w=700&q=80" alt="Data Center" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+        <div class="dc-img-fallback">🏢</div>
+      </div>
+      <div class="dc-lista">
+        <div class="dc-item"><div class="dc-dot"></div><div>Prédios cheios de <strong style="color:#E2E8F0">computadores super potentes</strong> funcionando 24h por dia, 7 dias por semana</div></div>
+        <div class="dc-item"><div class="dc-dot"></div><div>Possuem <strong style="color:#E2E8F0">sistemas de segurança avançados</strong> — câmeras, alarmes, controle de temperatura</div></div>
+        <div class="dc-item"><div class="dc-dot"></div><div><strong style="color:#E2E8F0">Geradores de energia</strong> garantem que nunca fiquem sem luz</div></div>
+        <div class="dc-item"><div class="dc-dot"></div><div>Guardam dados de <strong style="color:#E2E8F0">milhões de usuários</strong> ao mesmo tempo com segurança</div></div>
+      </div>
+    </div>
+
+    <!-- SERVIÇOS com logos reais -->
+    <div class="card">
+      <div style="font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;color:#0369A1;margin-bottom:4px">☁️ Serviços de nuvem mais usados</div>
+      <p style="font-size:12px;color:#64748B;margin-bottom:14px">Clique em cada serviço para saber mais.</p>
+      <div class="serv-grid">
+
+        <div class="serv-card" onclick="selServ(this,0)">
+          <div class="serv-logo" style="background:#F0F9FF">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Google_Drive_icon_%282020%29.svg/512px-Google_Drive_icon_%282020%29.svg.png" alt="Google Drive" onerror="this.textContent='📁'">
+          </div>
+          <div class="serv-body">
+            <div class="serv-nome">Google Drive</div>
+            <div class="serv-empresa">Google</div>
+            <span class="serv-free">15 GB grátis</span>
+            <div class="serv-desc">Integrado ao Gmail e Google Docs. Muito usado em escolas para compartilhar documentos, apresentações e planilhas.</div>
+          </div>
+        </div>
+
+        <div class="serv-card" onclick="selServ(this,1)">
+          <div class="serv-logo" style="background:#EFF6FF">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Microsoft_Office_OneDrive_%282019%E2%80%93present%29.svg/512px-Microsoft_Office_OneDrive_%282019%E2%80%93present%29.svg.png" alt="OneDrive" onerror="this.textContent='🔵'">
+          </div>
+          <div class="serv-body">
+            <div class="serv-nome">OneDrive</div>
+            <div class="serv-empresa">Microsoft</div>
+            <span class="serv-free">5 GB grátis</span>
+            <div class="serv-desc">Integrado ao Windows e ao pacote Office. Sincroniza automaticamente arquivos Word, Excel e PowerPoint.</div>
+          </div>
+        </div>
+
+        <div class="serv-card" onclick="selServ(this,2)">
+          <div class="serv-logo" style="background:#F9FAFB">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Apple_logo_grey.svg/512px-Apple_logo_grey.svg.png" alt="iCloud" onerror="this.textContent='🍎'" style="max-height:52px">
+          </div>
+          <div class="serv-body">
+            <div class="serv-nome">iCloud</div>
+            <div class="serv-empresa">Apple</div>
+            <span class="serv-free">5 GB grátis</span>
+            <div class="serv-desc">Exclusivo da Apple. Sincroniza fotos, contatos e apps entre iPhone, iPad e Mac automaticamente.</div>
+          </div>
+        </div>
+
+        <div class="serv-card" onclick="selServ(this,3)">
+          <div class="serv-logo" style="background:#EFF6FF">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Dropbox_logo_%282013%29.svg/512px-Dropbox_logo_%282013%29.svg.png" alt="Dropbox" onerror="this.textContent='📦'">
+          </div>
+          <div class="serv-body">
+            <div class="serv-nome">Dropbox</div>
+            <div class="serv-empresa">Dropbox Inc.</div>
+            <span class="serv-free">2 GB grátis</span>
+            <div class="serv-desc">Um dos primeiros serviços de nuvem. Fácil de usar, sincroniza pastas automaticamente em qualquer sistema operacional.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- VANTAGENS E DESVANTAGENS -->
+    <div class="vd-grid">
+      <div class="vd-box vd-vant">
+        <div class="vd-title">✅ Vantagens</div>
+        <div class="vd-item"><div class="vd-dot-v"></div><div>Acesso de <strong>qualquer dispositivo</strong> com internet</div></div>
+        <div class="vd-item"><div class="vd-dot-v"></div><div>Dados ficam seguros mesmo se o <strong>dispositivo quebrar</strong></div></div>
+        <div class="vd-item"><div class="vd-dot-v"></div><div><strong>Compartilhamento fácil</strong> com outras pessoas</div></div>
+        <div class="vd-item"><div class="vd-dot-v"></div><div><strong>Sincronização automática</strong> entre dispositivos</div></div>
+      </div>
+      <div class="vd-box vd-desv">
+        <div class="vd-title">⚠️ Desvantagens</div>
+        <div class="vd-item"><div class="vd-dot-d"></div><div>Sem internet, <strong>não consegue acessar</strong> os arquivos</div></div>
+        <div class="vd-item"><div class="vd-dot-d"></div><div>Depende da <strong>empresa continuar existindo</strong></div></div>
+        <div class="vd-item"><div class="vd-dot-d"></div><div>Espaço gratuito é <strong>limitado</strong> (5–15 GB)</div></div>
+        <div class="vd-item"><div class="vd-dot-d"></div><div>Preocupações com <strong>privacidade</strong> dos dados</div></div>
+      </div>
+    </div>
+
+    <button class="btn-pr bp-0" onclick="ir(1)">COMEÇAR AS ATIVIDADES ➜</button>
+  </div>
+  <footer><strong>Profª Adriana Bett Terebinto</strong> | Atividade pedagógica</footer>
+</div>
+
+<!-- ══════════ TELA 2 — QUIZ ══════════ -->
+<div class="tela" id="t1">
+  <div class="header h-t1">
+    <div><div class="header-badge">Atividade 1 de 4</div><div class="header-title">QUIZ</div><div class="header-sub">Escolha e confirme sua resposta</div></div>
+    <div class="steps" id="sp1"></div>
+  </div>
+  <div class="content">
+    <div class="card">
+      <div class="ah"><div class="an" style="background:#7C3AED">1</div><div><div class="at">Quiz — múltipla escolha</div><div class="as">6 perguntas · 1 pt cada</div></div></div>
+      <div class="hint hint-blue">💡 Selecione uma opção e clique em <strong>Confirmar</strong>. Você pode mudar antes de confirmar!</div>
+      <div id="qwrap"></div>
+      <div class="pgw"><div class="pgf" id="qpg" style="width:0%"></div></div>
+      <p id="qst" style="font-size:11px;color:#64748B;text-align:right;margin-top:3px">0 / 6 respondidas</p>
+      <button class="btn-pr bp-1" id="bqok" onclick="ir(2)" style="display:none;margin-top:12px">PRÓXIMA ATIVIDADE ➜</button>
+    </div>
+  </div>
+  <footer><strong>Profª Adriana Bett Terebinto</strong> | Atividade pedagógica</footer>
+</div>
+
+<!-- ══════════ TELA 3 — DRAG CLASSIFICA ══════════ -->
+<div class="tela" id="t2">
+  <div class="header h-t2">
+    <div><div class="header-badge">Atividade 2 de 4</div><div class="header-title">CLASSIFIQUE</div><div class="header-sub">Nuvem ou Local?</div></div>
+    <div class="steps" id="sp2"></div>
+  </div>
+  <div class="content">
+    <div class="card">
+      <div class="ah"><div class="an" style="background:#0F766E">2</div><div><div class="at">Arraste para o grupo correto</div><div class="as">8 itens · 0,5 pt cada</div></div></div>
+      <div class="hint hint-teal">💡 Arraste os cards para o grupo correto. Clique no <strong>✕</strong> para devolver ao banco e trocar!</div>
+      <div class="dpool" id="dpool">
+        <div class="dchip" draggable="true" data-g="nuv" id="dp-gdrive"  ondragstart="ds(event)"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Google_Drive_icon_%282020%29.svg/64px-Google_Drive_icon_%282020%29.svg.png" alt="" onerror="this.style.display='none'"><span>Google Drive</span></div>
+        <div class="dchip" draggable="true" data-g="nuv" id="dp-onedrive" ondragstart="ds(event)"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Microsoft_Office_OneDrive_%282019%E2%80%93present%29.svg/64px-Microsoft_Office_OneDrive_%282019%E2%80%93present%29.svg.png" alt="" onerror="this.style.display='none'"><span>OneDrive</span></div>
+        <div class="dchip" draggable="true" data-g="nuv" id="dp-icloud"  ondragstart="ds(event)"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Apple_logo_grey.svg/64px-Apple_logo_grey.svg.png" alt="" onerror="this.style.display='none'"><span>iCloud</span></div>
+        <div class="dchip" draggable="true" data-g="nuv" id="dp-dropbox" ondragstart="ds(event)"><img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/Dropbox_logo_%282013%29.svg/64px-Dropbox_logo_%282013%29.svg.png" alt="" onerror="this.style.display='none'"><span>Dropbox</span></div>
+        <div class="dchip" draggable="true" data-g="loc" id="dp-hd"      ondragstart="ds(event)"><span>💿 HD Interno</span></div>
+        <div class="dchip" draggable="true" data-g="loc" id="dp-ssd"     ondragstart="ds(event)"><span>⚡ SSD</span></div>
+        <div class="dchip" draggable="true" data-g="loc" id="dp-pen"     ondragstart="ds(event)"><span>🔌 Pen Drive</span></div>
+        <div class="dchip" draggable="true" data-g="loc" id="dp-sdcard"  ondragstart="ds(event)"><span>💳 Cartão SD</span></div>
+      </div>
+      <div class="zgrid">
+        <div class="dz z-nuv" id="z-nuv" ondragover="dov(event)" ondrop="ddp(event,'nuv')" ondragleave="dlv(event)">
+          <div class="zt">☁️ Armazenamento na Nuvem</div>
+          <div class="zitens" id="zi-nuv"></div>
+        </div>
+        <div class="dz z-loc" id="z-loc" ondragover="dov(event)" ondrop="ddp(event,'loc')" ondragleave="dlv(event)">
+          <div class="zt">💾 Armazenamento Local</div>
+          <div class="zitens" id="zi-loc"></div>
+        </div>
+      </div>
+      <button class="btn-pr bp-2" id="bdok" onclick="verDrag()" style="display:none;margin-top:12px">Verificar ✅</button>
+    </div>
+  </div>
+  <footer><strong>Profª Adriana Bett Terebinto</strong> | Atividade pedagógica</footer>
+</div>
+
+<!-- ══════════ TELA 4 — COMPLETE AS FRASES ══════════ -->
+<div class="tela" id="t3">
+  <div class="header h-t3">
+    <div><div class="header-badge">Atividade 3 de 4</div><div class="header-title">COMPLETE A FRASE</div><div class="header-sub">Selecione a palavra e clique na lacuna</div></div>
+    <div class="steps" id="sp3"></div>
+  </div>
+  <div class="content">
+    <div class="card">
+      <div class="ah"><div class="an" style="background:#B45309">3</div><div><div class="at">Banco de palavras</div><div class="as">6 lacunas · 0,5 pt cada</div></div></div>
+      <div class="hint hint-amber">💡 Clique em uma palavra do banco, depois clique na lacuna. Clique na lacuna preenchida para trocar!</div>
+      <div class="banco" id="banco">
+        <button class="pb" data-p="internet"    onclick="sp(this)">internet</button>
+        <button class="pb" data-p="servidores"  onclick="sp(this)">servidores</button>
+        <button class="pb" data-p="Google Drive" onclick="sp(this)">Google Drive</button>
+        <button class="pb" data-p="nuvem"       onclick="sp(this)">nuvem</button>
+        <button class="pb" data-p="data center" onclick="sp(this)">data center</button>
+        <button class="pb" data-p="dispositivo" onclick="sp(this)">dispositivo</button>
+      </div>
+      <div id="fwrap">
+        <div class="fln">1. O armazenamento em <span class="lac" data-r="nuvem" onclick="pl(this)">________</span> guarda dados em computadores potentes chamados servidores.</div><br>
+        <div class="fln">2. Os <span class="lac" data-r="servidores" onclick="pl(this)">________</span> ficam em prédios especiais chamados data centers.</div><br>
+        <div class="fln">3. Um <span class="lac" data-r="data center" onclick="pl(this)">________</span> é um local com computadores potentes que funcionam 24h por dia.</div><br>
+        <div class="fln">4. O <span class="lac" data-r="Google Drive" onclick="pl(this)">________</span> é um serviço de nuvem que oferece 15 GB gratuitos.</div><br>
+        <div class="fln">5. Para acessar arquivos na nuvem é necessário ter conexão com a <span class="lac" data-r="internet" onclick="pl(this)">________</span>.</div><br>
+        <div class="fln">6. Uma vantagem da nuvem é acessar seus arquivos de qualquer <span class="lac" data-r="dispositivo" onclick="pl(this)">________</span> conectado.</div>
+      </div>
+      <button class="btn-pr bp-3" id="bfok" onclick="verF()" style="display:none;margin-top:12px">Verificar frases ✅</button>
+    </div>
+  </div>
+  <footer><strong>Profª Adriana Bett Terebinto</strong> | Atividade pedagógica</footer>
+</div>
+
+<!-- ══════════ TELA 5 — VERDADEIRO OU FALSO ══════════ -->
+<div class="tela" id="t4">
+  <div class="header h-t4">
+    <div><div class="header-badge">Atividade 4 de 4</div><div class="header-title">VERDADEIRO OU FALSO</div><div class="header-sub">Escolha e confirme com atenção</div></div>
+    <div class="steps" id="sp4"></div>
+  </div>
+  <div class="content">
+    <div class="card">
+      <div class="ah"><div class="an" style="background:#BE185D">4</div><div><div class="at">Verdadeiro ou Falso?</div><div class="as">7 afirmações · 0,5 pt cada</div></div></div>
+      <div class="hint hint-pink">💡 Selecione Verdadeiro ou Falso e depois clique em <strong>Confirmar</strong>!</div>
+      <div id="vfwrap">
+        <div class="vfi" id="vf0"><div class="vfa">1. O armazenamento em nuvem guarda dados em servidores acessados pela internet.</div><div class="vfb"><button class="vfbt v" onclick="svf(0,true)">✓ Verdadeiro</button><button class="vfbt f" onclick="svf(0,false)">✗ Falso</button></div><button class="btn-conf-vf" id="cf0" onclick="rv(0,true)">Confirmar ✓</button><div class="vffb" id="vff0" style="display:none"></div></div>
+        <div class="vfi" id="vf1"><div class="vfa">2. O Google Drive, o OneDrive e o iCloud são exemplos de armazenamento local.</div><div class="vfb"><button class="vfbt v" onclick="svf(1,true)">✓ Verdadeiro</button><button class="vfbt f" onclick="svf(1,false)">✗ Falso</button></div><button class="btn-conf-vf" id="cf1" onclick="rv(1,false)">Confirmar ✓</button><div class="vffb" id="vff1" style="display:none"></div></div>
+        <div class="vfi" id="vf2"><div class="vfa">3. Se o seu computador quebrar, os arquivos guardados na nuvem permanecem seguros.</div><div class="vfb"><button class="vfbt v" onclick="svf(2,true)">✓ Verdadeiro</button><button class="vfbt f" onclick="svf(2,false)">✗ Falso</button></div><button class="btn-conf-vf" id="cf2" onclick="rv(2,true)">Confirmar ✓</button><div class="vffb" id="vff2" style="display:none"></div></div>
+        <div class="vfi" id="vf3"><div class="vfa">4. Sem conexão com a internet, você consegue acessar normalmente os arquivos guardados somente na nuvem.</div><div class="vfb"><button class="vfbt v" onclick="svf(3,true)">✓ Verdadeiro</button><button class="vfbt f" onclick="svf(3,false)">✗ Falso</button></div><button class="btn-conf-vf" id="cf3" onclick="rv(3,false)">Confirmar ✓</button><div class="vffb" id="vff3" style="display:none"></div></div>
+        <div class="vfi" id="vf4"><div class="vfa">5. Um data center é um local com computadores potentes que funcionam 24 horas por dia.</div><div class="vfb"><button class="vfbt v" onclick="svf(4,true)">✓ Verdadeiro</button><button class="vfbt f" onclick="svf(4,false)">✗ Falso</button></div><button class="btn-conf-vf" id="cf4" onclick="rv(4,true)">Confirmar ✓</button><div class="vffb" id="vff4" style="display:none"></div></div>
+        <div class="vfi" id="vf5"><div class="vfa">6. O iCloud é um serviço de nuvem desenvolvido pela Microsoft para usuários Windows.</div><div class="vfb"><button class="vfbt v" onclick="svf(5,true)">✓ Verdadeiro</button><button class="vfbt f" onclick="svf(5,false)">✗ Falso</button></div><button class="btn-conf-vf" id="cf5" onclick="rv(5,false)">Confirmar ✓</button><div class="vffb" id="vff5" style="display:none"></div></div>
+        <div class="vfi" id="vf6"><div class="vfa">7. Uma vantagem da nuvem é poder acessar os arquivos de qualquer dispositivo com internet.</div><div class="vfb"><button class="vfbt v" onclick="svf(6,true)">✓ Verdadeiro</button><button class="vfbt f" onclick="svf(6,false)">✗ Falso</button></div><button class="btn-conf-vf" id="cf6" onclick="rv(6,true)">Confirmar ✓</button><div class="vffb" id="vff6" style="display:none"></div></div>
+      </div>
+      <div class="pgw" style="margin-top:14px"><div class="pgf" id="vfpg" style="width:0%;background:#BE185D"></div></div>
+      <p id="vfst" style="font-size:11px;color:#64748B;text-align:right;margin-top:3px">0 / 7 respondidas</p>
+      <button class="btn-pr bp-4" id="bvfok" onclick="calcNota();ir(5)" style="display:none;margin-top:12px">VER RESULTADO FINAL 🏆</button>
+    </div>
+  </div>
+  <footer><strong>Profª Adriana Bett Terebinto</strong> | Atividade pedagógica</footer>
+</div>
+
+<!-- ══════════ TELA 6 — RESULTADO ══════════ -->
+<div class="tela" id="t5">
+  <div class="header h-t5">
+    <div><div class="header-badge">Resultado Final</div><div class="header-title">SEU DESEMPENHO</div><div class="header-sub">Armazenamento na Nuvem</div></div>
+    <div class="steps" id="sp5"></div>
+  </div>
+  <div class="content">
+    <div class="card" style="text-align:center;padding:28px 20px">
+      <div class="nr" id="nring"><span class="nn" id="nnota">—</span><span class="nm">/10</span></div>
+      <h2 style="font-family:'Nunito',sans-serif;font-size:21px;font-weight:900;margin-bottom:8px" id="rtit"></h2>
+      <p style="font-size:13px;color:#64748B;line-height:1.65" id="rsub"></p>
+    </div>
+    <div id="crev" class="rev-box" style="display:none">
+      <div class="rev-titulo">📌 Para melhorar, revise:</div>
+      <div id="ritens"></div>
+    </div>
+    <button class="btn-ref" onclick="location.reload()">🔄 Refazer a atividade</button>
+    <button class="btn-pr bp-res" onclick="ir(0)">📖 Rever o conteúdo</button>
+  </div>
+  <footer><strong>Profª Adriana Bett Terebinto</strong> | Atividade pedagógica</footer>
+</div>
+
+<script>
+const E={qAc:0,qResp:0,dAc:0,fAc:0,fPr:0,vfAc:0,vfResp:0};
+const QTOT=6,DTOT=8,FTOT=6,VFTOT=7,TELAS=6;
+
+function ir(n){
+  document.querySelectorAll('.tela').forEach((t,i)=>t.classList.toggle('ativa',i===n));
+  for(let i=0;i<TELAS;i++){
+    const el=document.getElementById('sp'+i);
+    if(!el) continue;
+    el.innerHTML=[...Array(TELAS)].map((_,j)=>`<div class="sd ${j<n?'done':j===n?'active':''}">${j+1}</div>`).join('');
+  }
+  window.scrollTo(0,0);
+}
+
+function selServ(el){
+  document.querySelectorAll('.serv-card').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+}
+
+/* ══ QUIZ ══ */
+const QS=[
+  {t:'O que é armazenamento em nuvem (cloud storage)?',ops:['Guardar dados em pen drives e cartões SD','Guardar dados em servidores remotos acessados pela internet','Guardar dados na memória RAM do computador','Guardar dados em CDs e DVDs'],c:1,exp:'O armazenamento em nuvem guarda os dados em servidores potentes localizados em data centers, acessíveis de qualquer lugar via internet.'},
+  {t:'Qual é a principal vantagem do armazenamento em nuvem?',ops:['Funciona sem internet','Pode ser acessado de qualquer dispositivo conectado à internet','É sempre gratuito e ilimitado','Nunca depende de empresas externas'],c:1,exp:'A grande vantagem da nuvem é acessar seus arquivos de qualquer dispositivo com internet — celular, notebook, computador da escola...'},
+  {t:'Qual é a principal desvantagem do armazenamento em nuvem?',ops:['Os arquivos somem quando o computador desliga','Só funciona em computadores Apple','Sem conexão com a internet, não é possível acessar os arquivos','É muito mais lento que um pen drive'],c:2,exp:'Sem internet, não conseguimos acessar arquivos guardados somente na nuvem. É a principal limitação desse tipo de armazenamento.'},
+  {t:'Onde ficam guardados os dados armazenados na nuvem?',ops:['Na memória RAM do seu computador','Em pen drives gigantes no seu roteador','Em servidores localizados em data centers','No HD do seu celular'],c:2,exp:'Os dados ficam em servidores — computadores muito potentes — dentro de data centers, que são prédios especializados que funcionam 24h por dia.'},
+  {t:'Qual serviço de nuvem é desenvolvido pela Google e oferece 15 GB gratuitos?',ops:['iCloud','OneDrive','Dropbox','Google Drive'],c:3,exp:'O Google Drive oferece 15 GB gratuitos e é integrado ao Gmail e ao Google Docs, sendo muito usado em escolas.'},
+  {t:'Uma estudante salvou sua redação no Google Drive. Ela poderá abrir o arquivo em casa no celular da mãe. Isso é possível porque:',ops:['O arquivo foi copiado automaticamente para todos os celulares','O Google Drive é um serviço de nuvem acessível de qualquer dispositivo com internet','O celular tem um HD igual ao do computador da escola','A redação foi enviada por e-mail automaticamente'],c:1,exp:'Essa é exatamente a vantagem da nuvem! O arquivo fica nos servidores do Google e pode ser acessado de qualquer dispositivo com internet.'},
+];
+const qSel={};
+
+function initQ(){
+  document.getElementById('qwrap').innerHTML=QS.map((q,i)=>`
+    <div id="qb${i}" style="margin-bottom:18px">
+      <p style="font-weight:700;font-size:14px;color:#1E293B;margin-bottom:8px;line-height:1.5">${i+1}. ${q.t}</p>
+      <div>${q.ops.map((o,oi)=>`<button class="opc" id="qo${i}_${oi}" onclick="selQ(${i},${oi})">${o}</button>`).join('')}</div>
+      <button class="btn-conf" id="qcf${i}" onclick="confQ(${i})">Confirmar ✓</button>
+      <div class="fbk" id="qf${i}"></div>
+    </div>`).join('');
+}
+
+function selQ(qi,oi){
+  if(document.getElementById('qb'+qi).dataset.r) return;
+  QS[qi].ops.forEach((_,j)=>document.getElementById(`qo${qi}_${j}`).classList.remove('sel'));
+  document.getElementById(`qo${qi}_${oi}`).classList.add('sel');
+  qSel[qi]=oi;
+  document.getElementById('qcf'+qi).style.display='inline-block';
+}
+
+function confQ(qi){
+  const blk=document.getElementById('qb'+qi);
+  if(blk.dataset.r||qSel[qi]===undefined) return;
+  blk.dataset.r='1';
+  const oi=qSel[qi],ok=oi===QS[qi].c;
+  QS[qi].ops.forEach((_,j)=>{const b=document.getElementById(`qo${qi}_${j}`);b.disabled=true;b.classList.remove('sel');});
+  document.getElementById(`qo${qi}_${oi}`).classList.add(ok?'ok':'err');
+  if(!ok) document.getElementById(`qo${qi}_${QS[qi].c}`).classList.add('ok');
+  document.getElementById('qcf'+qi).style.display='none';
+  const fb=document.getElementById('qf'+qi);
+  fb.style.display='block'; fb.className='fbk '+(ok?'ok':'err');
+  fb.textContent=(ok?'✅ Correto! ':'❌ Incorreto. ')+QS[qi].exp;
+  if(ok) E.qAc++;
+  E.qResp++;
+  document.getElementById('qpg').style.width=(E.qResp/QTOT*100)+'%';
+  document.getElementById('qst').textContent=E.qResp+' / '+QTOT+' respondidas';
+  if(E.qResp===QTOT) document.getElementById('bqok').style.display='flex';
+}
+
+/* ══ DRAG ══ */
+let dId=null;
+const dState={};
+
+function ds(e){
+  const chip=e.currentTarget||e.target.closest('.dchip');
+  if(!chip||chip.classList.contains('oculto')) return;
+  dId=chip.id; chip.style.opacity='.4';
+}
+function dov(e){e.preventDefault();e.currentTarget.classList.add('over')}
+function dlv(e){e.currentTarget.classList.remove('over')}
+
+function ddp(e,g){
+  e.preventDefault(); e.currentTarget.classList.remove('over');
+  if(!dId) return;
+  const chip=document.getElementById(dId);
+  if(!chip||chip.classList.contains('oculto')){dId=null;return;}
+  chip.style.opacity='1';
+  if(dState[dId]){
+    const ex=document.querySelector(`#zi-${dState[dId]} [data-cid="${dId}"]`);
+    if(ex) ex.remove();
+  }
+  dState[dId]=g; chip.classList.add('oculto');
+  const txt=chip.querySelector('span').textContent;
+  const tag=document.createElement('div');
+  tag.className='ztag'; tag.dataset.cid=dId; tag.dataset.cg=chip.dataset.g;
+  tag.innerHTML=`<span>${txt}</span><button class="rm" onclick="devolver('${dId}')">✕</button>`;
+  document.getElementById('zi-'+g).appendChild(tag);
+  dId=null;
+  if(Object.keys(dState).length===DTOT) document.getElementById('bdok').style.display='flex';
+}
+
+function devolver(cid){
+  const tag=document.querySelector(`[data-cid="${cid}"]`);
+  if(!tag||tag.classList.contains('ok')||tag.classList.contains('err')) return;
+  tag.remove(); delete dState[cid];
+  document.getElementById(cid).classList.remove('oculto');
+  if(Object.keys(dState).length<DTOT) document.getElementById('bdok').style.display='none';
+}
+
+function verDrag(){
+  let ac=0;
+  document.querySelectorAll('.ztag').forEach(t=>{
+    if(t.dataset.cg===dState[t.dataset.cid]){ac++;t.classList.add('ok');}
+    else t.classList.add('err');
+    const rm=t.querySelector('.rm'); if(rm) rm.style.display='none';
+  });
+  E.dAc=ac;
+  const b=document.getElementById('bdok');
+  b.textContent='PRÓXIMA ATIVIDADE ➜'; b.onclick=()=>ir(3);
+}
+
+/* ══ FRASES ══ */
+let psel=null;
+function sp(btn){
+  if(btn.classList.contains('usada')) return;
+  document.querySelectorAll('.pb').forEach(b=>b.classList.remove('sel'));
+  if(psel===btn.dataset.p){psel=null;return;}
+  psel=btn.dataset.p; btn.classList.add('sel');
+}
+function pl(lac){
+  if(lac.classList.contains('certa')||lac.classList.contains('errada')) return;
+  if(lac.dataset.p){
+    const w=lac.dataset.d; lac.dataset.p=''; lac.dataset.d=''; lac.textContent='________';
+    document.querySelectorAll('.pb').forEach(b=>{if(b.dataset.p===w){b.classList.remove('usada');b.disabled=false;}});
+    E.fPr--; if(E.fPr<FTOT) document.getElementById('bfok').style.display='none'; return;
+  }
+  if(!psel) return;
+  lac.dataset.p='1'; lac.dataset.d=psel; lac.textContent=psel;
+  document.querySelectorAll('.pb').forEach(b=>{if(b.dataset.p===psel){b.classList.add('usada');b.disabled=true;b.classList.remove('sel');}});
+  psel=null; E.fPr++;
+  if(E.fPr===FTOT) document.getElementById('bfok').style.display='flex';
+}
+function verF(){
+  let ac=0;
+  document.querySelectorAll('.lac[data-p="1"]').forEach(l=>{
+    if(l.dataset.d===l.dataset.r){ac++;l.classList.add('certa');}
+    else l.classList.add('errada');
+  });
+  E.fAc=ac;
+  const b=document.getElementById('bfok');
+  b.textContent='PRÓXIMA ATIVIDADE ➜'; b.onclick=()=>ir(4);
+}
+
+/* ══ V/F ══ */
+const vfSel={};
+function svf(i,v){
+  const el=document.getElementById('vf'+i); if(el.dataset.r) return;
+  vfSel[i]=v;
+  el.querySelectorAll('.vfbt').forEach(b=>b.classList.remove('sel-btn'));
+  el.querySelectorAll('.vfbt')[v?0:1].classList.add('sel-btn');
+  document.getElementById('cf'+i).style.display='inline-block';
+}
+function rv(i,correto){
+  const el=document.getElementById('vf'+i); if(el.dataset.r||vfSel[i]===undefined) return;
+  el.dataset.r='1'; const clicouV=vfSel[i];
+  el.querySelectorAll('.vfbt').forEach(b=>{b.disabled=true;b.classList.remove('sel-btn');});
+  document.getElementById('cf'+i).style.display='none';
+  const ok=(clicouV&&correto)||(!clicouV&&!correto);
+  const fb=document.getElementById('vff'+i);
+  fb.style.display='block'; fb.style.color=ok?'#14532D':'#7F1D1D';
+  fb.textContent=ok?'✅ Correto!':'❌ Incorreto. Resposta: '+(correto?'Verdadeiro':'Falso')+'.';
+  if(ok) E.vfAc++;
+  E.vfResp++;
+  document.getElementById('vfpg').style.width=(E.vfResp/VFTOT*100)+'%';
+  document.getElementById('vfst').textContent=E.vfResp+' / '+VFTOT+' respondidas';
+  if(E.vfResp===VFTOT) setTimeout(()=>document.getElementById('bvfok').style.display='flex',300);
+}
+
+/* ══ RESULTADO ══ */
+function calcNota(){
+  const raw=(E.qAc*1)+(E.dAc*0.5)+(E.fAc*0.5)+(E.vfAc*0.5);
+  const maxRaw=QTOT+DTOT*0.5+FTOT*0.5+VFTOT*0.5;
+  const nota=Math.round((raw/maxRaw)*100)/10;
+  document.getElementById('nnota').textContent=nota.toFixed(1).replace('.',',');
+  const ring=document.getElementById('nring'),tit=document.getElementById('rtit'),sub=document.getElementById('rsub');
+  if(nota>=9){ring.className='nr nA';tit.textContent='🏆 Excelente! Você dominou o conteúdo!';sub.textContent='Parabéns! Você entendeu muito bem o armazenamento em nuvem, os serviços e suas vantagens e desvantagens.';}
+  else if(nota>=7){ring.className='nr nB';tit.textContent='⭐ Muito bom! Ótimo aprendizado!';sub.textContent='Você compreendeu bem o conteúdo. Revise os pontos em que errou para ter domínio completo.';}
+  else if(nota>=5){ring.className='nr nC';tit.textContent='💪 Bom! Continue se esforçando.';sub.textContent='Você entendeu parte do conteúdo. Releia o resumo e tente novamente!';}
+  else{ring.className='nr nD';tit.textContent='📚 Vamos praticar mais!';sub.textContent='Volte ao conteúdo com calma e tente de novo. Você consegue!';}
+  if(nota<7){
+    document.getElementById('crev').style.display='block';
+    const itens=[];
+    if(E.qAc<4) itens.push('No <strong>quiz</strong>, revise o conceito de nuvem, data center e a vantagem/desvantagem do acesso pela internet.');
+    if(E.dAc<6) itens.push('Na <strong>classificação</strong>, pratique identificar serviços de nuvem (Google Drive, OneDrive, iCloud) × armazenamento local (HD, pen drive).');
+    if(E.fAc<4) itens.push('Nas <strong>frases</strong>, releia os conceitos: nuvem, servidores, data center e os serviços disponíveis.');
+    if(E.vfAc<5) itens.push('No <strong>Verdadeiro/Falso</strong>, atenção: nuvem precisa de internet e o iCloud é da Apple, não da Microsoft.');
+    document.getElementById('ritens').innerHTML=itens.map(i=>`<div class="rev-item"><div class="rev-dot"></div><div>${i}</div></div>`).join('');
+  }
+}
+
+initQ();
+ir(0);
+</script>
+</body>
+</html>
